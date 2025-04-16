@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, CheckCircle, Globe } from "lucide-react";
 import LoadingScreen from "./LoadingScreen";
 import ResultsScreen from "./ResultsScreen";
 
@@ -11,12 +11,14 @@ interface StepProps {
   placeholder: string;
   fieldName: keyof FormData;
   type?: string;
+  icon?: React.ReactNode;
 }
 
 interface FormData {
   name: string;
   email: string;
   company: string;
+  brandUrl: string;
 }
 
 const steps: StepProps[] = [
@@ -36,6 +38,12 @@ const steps: StepProps[] = [
     placeholder: "Company name",
     fieldName: "company",
   },
+  {
+    question: "What is the URL of your brand?",
+    placeholder: "www.yourbrand.com",
+    fieldName: "brandUrl",
+    icon: <Globe className="h-5 w-5 text-gray-400" />,
+  },
 ];
 
 const SignupForm: React.FC = () => {
@@ -44,6 +52,7 @@ const SignupForm: React.FC = () => {
     name: "",
     email: "",
     company: "",
+    brandUrl: "",
   });
   const [isAnimating, setIsAnimating] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -88,6 +97,14 @@ const SignupForm: React.FC = () => {
     if (
       currentField === "email" && 
       !/^\S+@\S+\.\S+$/.test(formData.email)
+    ) {
+      return;
+    }
+    
+    // URL validation for the brandUrl step
+    if (
+      currentField === "brandUrl" && 
+      !formData.brandUrl.trim().match(/^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*)?$/)
     ) {
       return;
     }
@@ -170,6 +187,11 @@ const SignupForm: React.FC = () => {
             className="h-14 px-4 text-lg"
             autoComplete={currentStepData.fieldName === "email" ? "email" : "off"}
           />
+          {currentStepData.icon && (
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+              {currentStepData.icon}
+            </div>
+          )}
           {formData[currentStepData.fieldName] && (
             <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 h-5 w-5" />
           )}

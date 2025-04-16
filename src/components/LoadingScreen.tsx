@@ -6,6 +6,7 @@ const messages = [
   "Crunching the numbers...",
   "Analyzing your industry...",
   "Getting insights ready...",
+  "Checking your brand presence...",
   "Almost there...",
 ];
 
