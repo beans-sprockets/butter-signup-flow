@@ -1,50 +1,20 @@
 
 import React, { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ArrowRight, ArrowLeft, CheckCircle, Globe } from "lucide-react";
 import LoadingScreen from "./LoadingScreen";
 import ResultsScreen from "./ResultsScreen";
-
-interface StepProps {
-  question: string;
-  placeholder: string;
-  fieldName: keyof FormData;
-  type?: string;
-  icon?: React.ReactNode;
-}
+import StepItem from "./signup/StepItem";
+import StepNavigation from "./signup/StepNavigation";
+import StepProgress from "./signup/StepProgress";
+import { signupSteps } from "./signup/formSteps";
+import { validateField } from "@/utils/formValidation";
 
 interface FormData {
   name: string;
   email: string;
   company: string;
   brandUrl: string;
+  [key: string]: string;
 }
-
-const steps: StepProps[] = [
-  {
-    question: "Hi there! What's your name?",
-    placeholder: "Your name",
-    fieldName: "name",
-  },
-  {
-    question: "Nice to meet you! What's your work email?",
-    placeholder: "name@company.com",
-    fieldName: "email",
-    type: "email",
-  },
-  {
-    question: "Great! What company do you work for?",
-    placeholder: "Company name",
-    fieldName: "company",
-  },
-  {
-    question: "What is the URL of your brand?",
-    placeholder: "www.yourbrand.com",
-    fieldName: "brandUrl",
-    icon: <Globe className="h-5 w-5 text-gray-400" />,
-  },
-];
 
 const SignupForm: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(0);
@@ -86,33 +56,17 @@ const SignupForm: React.FC = () => {
   };
 
   const handleNextStep = () => {
-    const currentField = steps[currentStep].fieldName;
+    const currentField = signupSteps[currentStep].fieldName;
     
-    // Basic validation - ensure the field is not empty
-    if (!formData[currentField].trim()) {
-      return;
-    }
-    
-    // Email validation for the email step
-    if (
-      currentField === "email" && 
-      !/^\S+@\S+\.\S+$/.test(formData.email)
-    ) {
-      return;
-    }
-    
-    // URL validation for the brandUrl step
-    if (
-      currentField === "brandUrl" && 
-      !formData.brandUrl.trim().match(/^(https?:\/\/)?(www\.)?[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+(\/[a-zA-Z0-9-._~:/?#[\]@!$&'()*+,;=]*)?$/)
-    ) {
+    // Validate the current field
+    if (!validateField(currentField, formData[currentField])) {
       return;
     }
     
     setIsAnimating(true);
     
     setTimeout(() => {
-      if (currentStep < steps.length - 1) {
+      if (currentStep < signupSteps.length - 1) {
         setCurrentStep((prev) => prev + 1);
       } else {
         // Form is complete, show loading screen
@@ -146,7 +100,8 @@ const SignupForm: React.FC = () => {
     return <ResultsScreen userName={formData.name} />;
   }
 
-  const currentStepData = steps[currentStep];
+  const currentStepData = signupSteps[currentStep];
+  const isLastStep = currentStep === signupSteps.length - 1;
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-white to-gray-50">
@@ -155,71 +110,30 @@ const SignupForm: React.FC = () => {
           isAnimating ? "animate-fade-out" : "animate-fade-in"
         }`}
       >
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-500">
-              Step {currentStep + 1} of {steps.length}
-            </div>
-            <div className="w-20 h-1 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-500 ease-in-out"
-                style={{
-                  width: `${((currentStep + 1) / steps.length) * 100}%`,
-                }}
-              ></div>
-            </div>
-          </div>
-        </div>
+        <StepProgress 
+          currentStep={currentStep} 
+          totalSteps={signupSteps.length} 
+        />
 
-        <h2 className="text-3xl font-bold tracking-tight mb-6">
-          {currentStepData.question}
-        </h2>
+        <StepItem
+          question={currentStepData.question}
+          placeholder={currentStepData.placeholder}
+          fieldName={currentStepData.fieldName}
+          type={currentStepData.type}
+          icon={currentStepData.icon}
+          value={formData[currentStepData.fieldName]}
+          onInputChange={handleInputChange}
+          onKeyDown={handleKeyPress}
+          inputRef={inputRef}
+        />
 
-        <div className="relative mb-8">
-          <Input
-            ref={inputRef}
-            type={currentStepData.type || "text"}
-            name={currentStepData.fieldName}
-            value={formData[currentStepData.fieldName]}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyPress}
-            placeholder={currentStepData.placeholder}
-            className="h-14 px-4 text-lg"
-            autoComplete={currentStepData.fieldName === "email" ? "email" : "off"}
-          />
-          {currentStepData.icon && (
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-              {currentStepData.icon}
-            </div>
-          )}
-          {formData[currentStepData.fieldName] && (
-            <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500 h-5 w-5" />
-          )}
-        </div>
-
-        <div className="flex justify-between items-center">
-          {currentStep > 0 ? (
-            <Button
-              variant="outline"
-              onClick={handlePrevStep}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          ) : (
-            <div></div>
-          )}
-
-          <Button
-            onClick={handleNextStep}
-            className="flex items-center gap-2"
-            disabled={!formData[currentStepData.fieldName].trim()}
-          >
-            {currentStep < steps.length - 1 ? "Continue" : "Complete"}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <StepNavigation
+          currentStep={currentStep}
+          isFormFieldEmpty={!formData[currentStepData.fieldName].trim()}
+          onNextStep={handleNextStep}
+          onPrevStep={handlePrevStep}
+          isLastStep={isLastStep}
+        />
 
         <div className="mt-16 text-center text-sm text-gray-500">
           <p>Press Enter ⏎ to continue</p>
