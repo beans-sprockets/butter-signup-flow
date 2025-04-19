@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 
 interface CountUpProps {
@@ -5,6 +6,7 @@ interface CountUpProps {
   duration?: number;
   start?: number;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const CountUp: React.FC<CountUpProps> = ({
@@ -12,6 +14,7 @@ const CountUp: React.FC<CountUpProps> = ({
   duration = 2,
   start = 0,
   className = "",
+  style = {}
 }) => {
   const [count, setCount] = useState(start);
   
@@ -43,7 +46,7 @@ const CountUp: React.FC<CountUpProps> = ({
     return () => cancelAnimationFrame(animationFrame);
   }, [end, duration, start]);
   
-  return <span className={className}>{count.toLocaleString()}</span>;
+  return <span className={className} style={style}>{count.toLocaleString()}</span>;
 };
 
 export default CountUp;
