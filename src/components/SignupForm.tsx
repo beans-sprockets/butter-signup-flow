@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import LoadingScreen from "./LoadingScreen";
 import ResultsScreen from "./ResultsScreen";
@@ -7,6 +6,8 @@ import StepNavigation from "./signup/StepNavigation";
 import StepProgress from "./signup/StepProgress";
 import { signupSteps } from "./signup/formSteps";
 import { validateField } from "@/utils/formValidation";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 interface FormData {
   name: string;
@@ -55,7 +56,7 @@ const SignupForm: React.FC = () => {
     }
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const currentField = signupSteps[currentStep].fieldName;
     
     // Validate the current field
@@ -65,21 +66,46 @@ const SignupForm: React.FC = () => {
     
     setIsAnimating(true);
     
-    setTimeout(() => {
-      if (currentStep < signupSteps.length - 1) {
+    if (currentStep < signupSteps.length - 1) {
+      setTimeout(() => {
         setCurrentStep((prev) => prev + 1);
-      } else {
-        // Form is complete, show loading screen
-        setIsLoading(true);
-        
-        // Simulate API call and then show results
+        setIsAnimating(false);
+      }, 500);
+    } else {
+      // Form is complete, show loading screen
+      setIsLoading(true);
+      
+      try {
+        // Submit data to Supabase
+        const { error } = await supabase
+          .from('signups')
+          .insert([
+            {
+              name: formData.name,
+              email: formData.email,
+              company: formData.company,
+              brand_url: formData.brandUrl
+            }
+          ]);
+
+        if (error) {
+          throw error;
+        }
+
+        // Show success screen after brief delay
         setTimeout(() => {
           setIsLoading(false);
           setIsComplete(true);
-        }, 3000);
+        }, 1500);
+      } catch (error: any) {
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: error.message || "Failed to submit signup form. Please try again.",
+        });
       }
-      setIsAnimating(false);
-    }, 500);
+    }
   };
 
   const handlePrevStep = () => {
