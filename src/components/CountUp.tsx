@@ -1,16 +1,17 @@
-
 import React, { useState, useEffect } from "react";
 
 interface CountUpProps {
   end: number;
   duration?: number;
   start?: number;
+  className?: string;
 }
 
 const CountUp: React.FC<CountUpProps> = ({
   end,
   duration = 2,
   start = 0,
+  className = "",
 }) => {
   const [count, setCount] = useState(start);
   
@@ -23,16 +24,13 @@ const CountUp: React.FC<CountUpProps> = ({
       const progress = timestamp - startTime;
       const progressRatio = Math.min(progress / (duration * 1000), 1);
       
-      // Easing function for smoother animation
       const easedProgress = progressRatio < 0.5
         ? 2 * progressRatio * progressRatio
         : 1 - Math.pow(-2 * progressRatio + 2, 2) / 2;
       
-      // Calculate the current count
       const currentCount = Math.floor(easedProgress * (end - start) + start);
       setCount(currentCount);
       
-      // Continue animation if not complete
       if (progressRatio < 1) {
         animationFrame = requestAnimationFrame(updateCount);
       } else {
@@ -45,7 +43,7 @@ const CountUp: React.FC<CountUpProps> = ({
     return () => cancelAnimationFrame(animationFrame);
   }, [end, duration, start]);
   
-  return <>{count.toLocaleString()}</>;
+  return <span className={className}>{count.toLocaleString()}</span>;
 };
 
 export default CountUp;
