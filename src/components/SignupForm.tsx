@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import LoadingScreen from "./LoadingScreen";
 import ResultsScreen from "./ResultsScreen";
@@ -30,6 +31,19 @@ const SignupForm: React.FC = () => {
   const [isComplete, setIsComplete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Ensure signupSteps is valid and not empty
+  if (!signupSteps || signupSteps.length === 0) {
+    console.error("signupSteps is undefined or empty");
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center px-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600">Configuration Error</h2>
+          <p className="mt-2 text-gray-600">Unable to load form steps. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
+
   const focusInput = () => {
     if (inputRef.current) {
       setTimeout(() => {
@@ -57,6 +71,12 @@ const SignupForm: React.FC = () => {
   };
 
   const handleNextStep = async () => {
+    // Ensure currentStep is within bounds
+    if (currentStep >= signupSteps.length) {
+      console.error("Current step is out of bounds");
+      return;
+    }
+
     const currentField = signupSteps[currentStep].fieldName;
     
     // Validate the current field
@@ -124,6 +144,13 @@ const SignupForm: React.FC = () => {
 
   if (isComplete) {
     return <ResultsScreen userName={formData.name} />;
+  }
+
+  // Ensure currentStep is within bounds before accessing
+  if (currentStep >= signupSteps.length) {
+    console.error("Current step index out of bounds", currentStep, signupSteps.length);
+    setCurrentStep(0); // Reset to first step if out of bounds
+    return null; // Prevent render while resetting
   }
 
   const currentStepData = signupSteps[currentStep];
